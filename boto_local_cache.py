@@ -18,7 +18,7 @@ def saveObjectLocally(Bucket, Key, Object):
         f.write(Object)
 
 def client(service):
-    print('GETTING CLIENT')
+    print('GETTING MOCK BOTO CLIENT')
     if service == 's3':
         return s3()
     else:
@@ -26,16 +26,16 @@ def client(service):
 
 class s3:
     def __init__(self):
-        print("Creating S3 Local Cache")
         self.aws_s3 = boto3.client('s3')
 
     def get_object(self, Bucket, Key):
-        print('GETTING OBJECT')
         path = os.path.expanduser(os.path.join(pathToLocalStorage, Bucket, Key))
         
         if not os.path.isfile(path):
             obj = self.aws_s3.get_object(Bucket=Bucket, Key=Key)
             saveObjectLocally(Bucket, Key, obj['Body'].read())
+        else:
+            print('Found Object In Cache')
 
         #Leaks file... program doesnt run long enough to matter?
         mockResponse = {}
