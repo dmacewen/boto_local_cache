@@ -1,49 +1,49 @@
 import boto3
 import os
 
-pathToLocalStorage = './local'
+pathToLocalStorage = '~/Projects/tone/local_s3_cache'
 
 def existsOrBuildPath(path):
     return False
 
 def saveObjectLocally(Bucket, Key, Object):
-    path = os.path.join(pathToLocalStorage, Bucket, Key)
+    path = os.path.expanduser(os.path.join(pathToLocalStorage, Bucket, Key))
 
     directory = os.path.dirname(path)
 
     if not os.path.isdir(directory):
-        os.mkdir(path)
+        os.makedirs(directory, exist_ok=True)
 
     with open(path, 'wb') as f:
         f.write(Object)
 
 def client(service):
+    print('GETTING CLIENT')
     if service == 's3':
         return s3()
     else:
         return None
 
 class s3:
-    def init(self):
+    def __init__(self):
         print("Creating S3 Local Cache")
-        self.s3 = boto3.client('s3')
+        self.aws_s3 = boto3.client('s3')
 
     def get_object(self, Bucket, Key):
-        path = os.path.join(pathToLocalStorage, Bucket, Key)
+        print('GETTING OBJECT')
+        path = os.path.expanduser(os.path.join(pathToLocalStorage, Bucket, Key))
         
         if not os.path.isfile(path):
-            obj = self.s3.get_object(Bucket, Key)
-            saveObjectLocally(Bucket, Key, obj)
-            return obj
+            obj = self.aws_s3.get_object(Bucket=Bucket, Key=Key)
+            saveObjectLocally(Bucket, Key, obj['Body'].read())
 
-
-        with open(path, 'rb') as f:
-            data = f.read()
-
-        return data
+        #Leaks file... program doesnt run long enough to matter?
+        mockResponse = {}
+        mockResponse['Body'] = open(path, 'rb')
+        return mockResponse
 
     def put_object(self, Bucket, Key, Body):
-        saveObjectLocally(Bucket, Key, obj)
+        saveObjectLocally(Bucket, Key, Body)
 
 
 
